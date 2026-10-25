@@ -1,0 +1,26 @@
+[project]
+name = "skiltronom"
+version = "0.1.0"
+description = "A progressive metronome for skill practice"
+readme = "README.md"
+authors = [
+    { name = "ShadowMuffin512", email = "liordah0@gmail.com" }
+]
+requires-python = ">=3.11"
+dependencies = [
+    "flet>=1.0.1",
+    "flet-audio>=1.0.1",
+]
+
+[dependency-groups]
+dev = [
+    "flet-cli>=1.0.1",
+    "flet-desktop>=1.0.1",
+    "flet-web>=1.0.1",
+    "flet[test]>=1.0.1",
+    "ruff>=0.16.9",
+    "ty>=0.0.84",
+]
+
+[tool.uv]
+package = false
