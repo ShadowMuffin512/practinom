@@ -62,33 +62,9 @@ class PractinomButton(ft.Button):
 def setupButtons(page: ft.Page, metronome: Metronome):
     input_fields: dict[str, PractinomNumberInput] = {}
 
-    # --- Live Display References ---
-    status_dot = ft.Container(
-        width=8,
-        height=8,
-        border_radius=4,
-        bgcolor=ACCENT_COLOR,
-    )
-    status_text = ft.Text(
-        value="IDLE",
-        size=11,
-        weight=ft.FontWeight.BOLD,
-        color=ACCENT_COLOR,
-    )
-    status_pill = ft.Container(
-        content=ft.Row(
-            controls=[status_dot, status_text],
-            spacing=6,
-            alignment=ft.MainAxisAlignment.CENTER,
-        ),
-        bgcolor="#E7EFEA",
-        border_radius=20,
-        padding=ft.Padding.symmetric(horizontal=12, vertical=6),
-    )
-
     tempo_display = ft.Text(
         value=str(metronome.current_tempo),
-        size=50,
+        size=72,
         weight=ft.FontWeight.BOLD,
         color="#FFFFFF",
     )
@@ -99,7 +75,7 @@ def setupButtons(page: ft.Page, metronome: Metronome):
         color=BG_COLOR,
     )
     progression_summary = ft.Text(
-        value=f"{metronome.starting_tempo} → {metronome.ending_tempo} BPM (+{metronome.step_size} BPM/step)",
+        value=f"{metronome.starting_tempo} → {metronome.ending_tempo} BPM ({'+' if metronome.step_size > 0 else ''}{metronome.step_size} BPM/step)",
         size=11,
         color="#A7C2B2",
     )
@@ -107,7 +83,8 @@ def setupButtons(page: ft.Page, metronome: Metronome):
     beat_dots_row = ft.Row(
         controls=[],
         spacing=8,
-        alignment=ft.MainAxisAlignment.START,
+        alignment=ft.MainAxisAlignment.CENTER,
+        vertical_alignment=ft.CrossAxisAlignment.CENTER,
     )
 
     def render_beat_dots(active_idx: int = -1):
@@ -134,13 +111,6 @@ def setupButtons(page: ft.Page, metronome: Metronome):
 
     render_beat_dots()
 
-    def update_status(text: str, bg_color: str, dot_color: str, text_color: str):
-        status_text.value = text
-        status_text.color = text_color
-        status_dot.bgcolor = dot_color
-        status_pill.bgcolor = bg_color
-        status_pill.update()
-
     def on_input_change(field_name: str, default: int):
         def handler(e: ft.ControlEvent):
             try:
@@ -157,7 +127,7 @@ def setupButtons(page: ft.Page, metronome: Metronome):
         step_display.value = f"Step {metronome.current_step + 1} / {metronome.steps}"
         progression_summary.value = (
             f"{metronome.starting_tempo} → {metronome.ending_tempo} BPM "
-            f"(+{metronome.step_size} BPM/step)"
+            f"({'+' if metronome.step_size > 0 else ''}{metronome.step_size} BPM/step)"
         )
         render_beat_dots()
         hero_card.update()
@@ -171,7 +141,7 @@ def setupButtons(page: ft.Page, metronome: Metronome):
         if field_name == "current_beat_in_step":
             tempo_display.value = str(metronome.current_tempo)
             step_display.value = (
-                f"Step {metronome.current_step + 1} / {metronome.steps}"
+                f"Step {metronome.current_step + 1} / {metronome.steps + 1}"
             )
             if metronome.beats > 0:
                 active_beat = (metronome.current_beat_in_step - 1) % metronome.beats
@@ -185,17 +155,14 @@ def setupButtons(page: ft.Page, metronome: Metronome):
             )
             progression_summary.value = (
                 f"{metronome.starting_tempo} → {metronome.ending_tempo} BPM "
-                f"(+{metronome.step_size} BPM/step)"
+                f"({'+' if metronome.step_size > 0 else ''}{metronome.step_size} BPM/step)"
             )
             hero_card.update()
 
         elif field_name == "stopped":
             if value:
-                update_status("STOPPED", "#EFEAE7", ACCENT_COLOR, ACCENT_COLOR)
                 render_beat_dots(-1)
                 hero_card.update()
-            else:
-                update_status("PLAYING", "#D5ECDC", BG_COLOR, MAIN_COLOR)
 
     metronome.add_listener(on_metronome_change)
 
@@ -274,7 +241,7 @@ def setupButtons(page: ft.Page, metronome: Metronome):
                                 color=MAIN_COLOR,
                             ),
                             ft.Text(
-                                value="Practice Metronome • Lior Dahan",
+                                value="Practice metronome, made by Lior Dahan",
                                 size=11,
                                 color=ACCENT_COLOR,
                                 weight=ft.FontWeight.W_500,
@@ -285,7 +252,6 @@ def setupButtons(page: ft.Page, metronome: Metronome):
                 ],
                 spacing=12,
             ),
-            status_pill,
         ],
         alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
     )
@@ -296,28 +262,27 @@ def setupButtons(page: ft.Page, metronome: Metronome):
             controls=[
                 ft.Row(
                     controls=[
-                        ft.Text(
-                            value="CURRENT TEMPO",
-                            size=11,
-                            weight=ft.FontWeight.BOLD,
-                            color="#9FC0AE",
-                        ),
                         step_display,
                     ],
                     alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
                 ),
-                ft.Row(
-                    controls=[
-                        tempo_display,
-                        ft.Text(
-                            value="BPM",
-                            size=16,
-                            weight=ft.FontWeight.BOLD,
-                            color=BG_COLOR,
-                        ),
-                    ],
-                    spacing=8,
-                    vertical_alignment=ft.CrossAxisAlignment.END,
+                ft.Container(
+                    alignment=ft.Alignment.CENTER,
+                    padding=ft.Padding.symmetric(horizontal=100),
+                    content=ft.Row(
+                        controls=[
+                            tempo_display,  # TODO change design to starting -> current -> end BPM
+                            ft.Text(
+                                value="BPM",
+                                size=18,
+                                weight=ft.FontWeight.BOLD,
+                                color=BG_COLOR,
+                            ),
+                        ],
+                        spacing=8,
+                        width=150,
+                        vertical_alignment=ft.CrossAxisAlignment.CENTER,
+                    ),
                 ),
                 ft.Row(
                     controls=[
@@ -430,22 +395,18 @@ def setupButtons(page: ft.Page, metronome: Metronome):
     # --- Playback Controls ---
     def on_play_click(e):
         metronome.play()
-        update_status("PLAYING", "#D5ECDC", BG_COLOR, MAIN_COLOR)
 
     def on_pause_click(e):
         metronome.pause()
-        update_status("PAUSED", "#EFE9DF", "#8F7B56", "#615132")
 
     def on_stop_click(e):
         metronome.stop()
-        update_status("IDLE", "#E7EFEA", ACCENT_COLOR, ACCENT_COLOR)
         sync_hero_display()
 
     play_button = PractinomButton(
         content=ft.Row(
             controls=[
                 ft.Icon(ft.Icons.PLAY_ARROW_ROUNDED, color=BG_COLOR, size=22),
-                ft.Text("Play", weight=ft.FontWeight.BOLD, color="#FFFFFF", size=15),
             ],
             alignment=ft.MainAxisAlignment.CENTER,
             spacing=6,
@@ -459,7 +420,6 @@ def setupButtons(page: ft.Page, metronome: Metronome):
         content=ft.Row(
             controls=[
                 ft.Icon(ft.Icons.PAUSE_ROUNDED, color="#FFFFFF", size=20),
-                ft.Text("Pause", color="#FFFFFF", size=14),
             ],
             alignment=ft.MainAxisAlignment.CENTER,
             spacing=4,
@@ -473,7 +433,6 @@ def setupButtons(page: ft.Page, metronome: Metronome):
         content=ft.Row(
             controls=[
                 ft.Icon(ft.Icons.STOP_ROUNDED, color="#FFFFFF", size=20),
-                ft.Text("Stop", color="#FFFFFF", size=14),
             ],
             alignment=ft.MainAxisAlignment.CENTER,
             spacing=4,

@@ -41,9 +41,7 @@ class Metronome:
 
     @property
     def current_tempo(self) -> int:
-        return min(
-            self.ending_tempo, self.starting_tempo + self.current_step * self.step_size
-        )
+        return self.starting_tempo + self.current_step * self.step_size
 
     @property
     def current_measure_in_step(self) -> int:
