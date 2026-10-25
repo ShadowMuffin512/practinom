@@ -294,26 +294,9 @@ def setupButtons(page: ft.Page, metronome: Metronome):
         padding=ft.Padding.symmetric(horizontal=20, vertical=18),
     )
 
-    # --- Tempo Progression Card ---
     tempo_card = ft.Container(
         content=ft.Column(
             controls=[
-                ft.Row(
-                    controls=[
-                        ft.Icon(
-                            ft.Icons.TRENDING_UP_ROUNDED,
-                            size=16,
-                            color=ACCENT_COLOR,
-                        ),
-                        ft.Text(
-                            value="TEMPO PROGRESSION",
-                            size=11,
-                            weight=ft.FontWeight.BOLD,
-                            color=MAIN_COLOR,
-                        ),
-                    ],
-                    spacing=6,
-                ),
                 ft.Row(
                     controls=[
                         beats_input,
@@ -338,9 +321,6 @@ def setupButtons(page: ft.Page, metronome: Metronome):
             spacing=12,
             horizontal_alignment=ft.CrossAxisAlignment.STRETCH,
         ),
-        bgcolor=CARD_BG,
-        border=ft.Border.all(1, INPUT_BORDER),
-        border_radius=16,
         padding=16,
     )
 
