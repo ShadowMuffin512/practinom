@@ -14,7 +14,6 @@ class Metronome:
     steps: int
     measures_per_step: int
     beats: int
-    measure: int
     audio_player: AudioPlayer | None = None
     current_step: int = 0
     current_beat_in_step: int = 0
@@ -43,10 +42,6 @@ class Metronome:
     def current_tempo(self) -> int:
         return self.starting_tempo + self.current_step * self.step_size
 
-    @property
-    def current_measure_in_step(self) -> int:
-        return floor(self.current_beat_in_step / self.measure)
-
     async def beat(self) -> consts.BeatType:
         print(
             f"BEAT, current tempo: {self.current_tempo}, current beat in step: {self.current_beat_in_step}"
@@ -55,7 +50,7 @@ class Metronome:
         if self.current_beat_in_step >= self.measures_per_step * self.beats:
             self.incrase_step()
             sound = consts.BeatType.STEP
-        elif self.current_beat_in_step % self.measure == 0:
+        elif self.current_beat_in_step % self.beats == 0:
             sound = consts.BeatType.MEASURE
         print(sound)
         self.current_beat_in_step += 1

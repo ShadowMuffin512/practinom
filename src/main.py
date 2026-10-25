@@ -168,16 +168,10 @@ def setupButtons(page: ft.Page, metronome: Metronome):
 
     # --- Inputs ---
     beats_input = PractinomNumberInput(
-        label="Beats",
+        label="Ticks / Rep",
         value=str(metronome.beats),
         expand=1,
         on_blur=on_input_change("beats", metronome.beats),
-    )
-    measure_input = PractinomNumberInput(
-        label="Measure Note",
-        value=str(metronome.measure),
-        expand=1,
-        on_blur=on_input_change("measure", metronome.measure),
     )
     starting_tempo_input = PractinomNumberInput(
         label="Start Tempo",
@@ -200,7 +194,7 @@ def setupButtons(page: ft.Page, metronome: Metronome):
         on_blur=on_input_change("steps", metronome.steps),
     )
     measures_per_step_input = PractinomNumberInput(
-        label="Measures / Step",
+        label="Reps / Step",
         value=str(metronome.measures_per_step),
         expand=1,
         on_blur=on_input_change("measures_per_step", metronome.measures_per_step),
@@ -209,7 +203,6 @@ def setupButtons(page: ft.Page, metronome: Metronome):
     input_fields.update(
         {
             "beats": beats_input,
-            "measure": measure_input,
             "starting_tempo": starting_tempo_input,
             "ending_tempo": ending_tempo_input,
             "steps": steps_input,
@@ -301,53 +294,6 @@ def setupButtons(page: ft.Page, metronome: Metronome):
         padding=ft.Padding.symmetric(horizontal=20, vertical=18),
     )
 
-    # --- Time Signature Card ---
-    rhythm_card = ft.Container(
-        content=ft.Column(
-            controls=[
-                ft.Row(
-                    controls=[
-                        ft.Icon(
-                            ft.Icons.MUSIC_NOTE_ROUNDED,
-                            size=16,
-                            color=ACCENT_COLOR,
-                        ),
-                        ft.Text(
-                            value="TIME SIGNATURE",
-                            size=11,
-                            weight=ft.FontWeight.BOLD,
-                            color=MAIN_COLOR,
-                        ),
-                    ],
-                    spacing=6,
-                ),
-                ft.Row(
-                    controls=[
-                        beats_input,
-                        ft.Container(
-                            content=ft.Text(
-                                value="/",
-                                size=22,
-                                weight=ft.FontWeight.BOLD,
-                                color=ACCENT_COLOR,
-                            ),
-                            alignment=ft.Alignment.CENTER,
-                            padding=ft.Padding.symmetric(horizontal=8),
-                        ),
-                        measure_input,
-                    ],
-                    vertical_alignment=ft.CrossAxisAlignment.CENTER,
-                ),
-            ],
-            spacing=10,
-            horizontal_alignment=ft.CrossAxisAlignment.STRETCH,
-        ),
-        bgcolor=CARD_BG,
-        border=ft.Border.all(1, INPUT_BORDER),
-        border_radius=16,
-        padding=16,
-    )
-
     # --- Tempo Progression Card ---
     tempo_card = ft.Container(
         content=ft.Column(
@@ -367,6 +313,12 @@ def setupButtons(page: ft.Page, metronome: Metronome):
                         ),
                     ],
                     spacing=6,
+                ),
+                ft.Row(
+                    controls=[
+                        beats_input,
+                    ],
+                    vertical_alignment=ft.CrossAxisAlignment.CENTER,
                 ),
                 ft.Row(
                     controls=[
@@ -453,7 +405,6 @@ def setupButtons(page: ft.Page, metronome: Metronome):
             controls=[
                 header_section,
                 hero_card,
-                rhythm_card,
                 tempo_card,
                 controls_bar,
             ],
@@ -476,7 +427,7 @@ def setupButtons(page: ft.Page, metronome: Metronome):
 
 def main(page: ft.Page):
     audio_player = AudioPlayer(1)
-    metronome = Metronome(60, 140, 10, 4, 4, 4, audio_player)
+    metronome = Metronome(60, 140, 10, 4, 4, audio_player)
     page.services.extend(audio_player.get_services())
     page.update()
 
