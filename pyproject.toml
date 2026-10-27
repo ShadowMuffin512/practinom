@@ -1,5 +1,5 @@
 [project]
-name = "skiltronom"
+name = "practinom"
 version = "0.1.0"
 description = "A progressive metronome for skill practice"
 readme = "README.md"
@@ -24,3 +24,8 @@ dev = [
 
 [tool.uv]
 package = false
+
+[tool.flet.app]
+path = "src"
+module = "main.py"
+assets = "assets"
