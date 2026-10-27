@@ -13,7 +13,7 @@ class Metronome:
     ending_tempo: int
     steps: int
     measures_per_step: int
-    beats: int
+    beats_per_measure: int
     audio_player: AudioPlayer | None = None
     current_step: int = 0
     current_beat_in_step: int = 0
@@ -42,16 +42,29 @@ class Metronome:
     def current_tempo(self) -> int:
         return self.starting_tempo + self.current_step * self.step_size
 
+    @property
+    def measures_left(self) -> int:
+        if self.beats_per_measure <= 0:
+            return 0
+        completed_measures = (
+            max(0, self.current_beat_in_step - 1) // self.beats_per_measure
+        )
+        return max(0, self.measures_per_step - completed_measures)
+
     async def beat(self) -> consts.BeatType:
+        if self.current_beat_in_step >= self.measures_per_step * self.beats_per_measure:
+            self.incrase_step()
+            if self.stopped:
+                return consts.BeatType.STEP
+            sound = consts.BeatType.STEP
+        elif self.current_beat_in_step % self.beats_per_measure == 0:
+            sound = consts.BeatType.MEASURE
+        else:
+            sound = consts.BeatType.BEAT
+
         print(
             f"BEAT, current tempo: {self.current_tempo}, current beat in step: {self.current_beat_in_step}"
         )
-        sound = consts.BeatType.BEAT
-        if self.current_beat_in_step >= self.measures_per_step * self.beats:
-            self.incrase_step()
-            sound = consts.BeatType.STEP
-        elif self.current_beat_in_step % self.beats == 0:
-            sound = consts.BeatType.MEASURE
         print(sound)
         self.current_beat_in_step += 1
         if self.audio_player is not None:

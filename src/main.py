@@ -59,23 +59,53 @@ class PractinomButton(ft.Button):
     )
 
 
-def setupButtons(page: ft.Page, metronome: Metronome):
+def setup_buttons(page: ft.Page, metronome: Metronome):
     input_fields: dict[str, PractinomNumberInput] = {}
 
-    tempo_display = ft.Text(
-        value=str(metronome.current_tempo),
-        size=72,
+    reps_left = ft.Text(
+        value=f"x{metronome.measures_left!s}",
+        size=11,
+        weight=ft.FontWeight.W_700,
+        color="#FFFFFF",
+    )
+
+    starting_tempo_display = ft.Text(
+        value=str(metronome.starting_tempo),
+        size=32,
         weight=ft.FontWeight.BOLD,
         color="#FFFFFF",
     )
-    step_display = ft.Text(
-        value=f"Step {metronome.current_step + 1} / {metronome.steps}",
-        size=12,
-        weight=ft.FontWeight.W_600,
-        color=BG_COLOR,
+
+    arrow_symbol_left = ft.Text(
+        value="→",
+        size=32,
+        weight=ft.FontWeight.BOLD,
+        color="#FFFFFF",
     )
+
+    arrow_symbol_right = ft.Text(
+        value="→",
+        size=32,
+        weight=ft.FontWeight.BOLD,
+        color="#FFFFFF",
+    )
+
+    current_tempo_display = ft.Text(
+        value=str(metronome.current_tempo),
+        size=48,
+        weight=ft.FontWeight.BOLD,
+        color="#FFFFFF",
+    )
+
+    ending_tempo_display = ft.Text(
+        value=str(metronome.ending_tempo),
+        size=32,
+        weight=ft.FontWeight.BOLD,
+        color="#FFFFFF",
+    )
+
     progression_summary = ft.Text(
-        value=f"{metronome.starting_tempo} → {metronome.ending_tempo} BPM ({'+' if metronome.step_size > 0 else ''}{metronome.step_size} BPM/step)",
+        value=f"{'+' if metronome.step_size > 0 else ''}{metronome.step_size} BPM/step",
         size=11,
         color="#A7C2B2",
     )
@@ -89,7 +119,7 @@ def setupButtons(page: ft.Page, metronome: Metronome):
 
     def render_beat_dots(active_idx: int = -1):
         dots = []
-        count = min(max(metronome.beats, 1), 16)
+        count = min(max(metronome.beats_per_measure, 1), 16)
         for i in range(count):
             is_active = i == active_idx
             if is_active:
@@ -123,11 +153,10 @@ def setupButtons(page: ft.Page, metronome: Metronome):
         return handler
 
     def sync_hero_display():
-        tempo_display.value = str(metronome.current_tempo)
-        step_display.value = f"Step {metronome.current_step + 1} / {metronome.steps}"
+        current_tempo_display.value = str(metronome.current_tempo)
+        reps_left.value = f"x{metronome.measures_left!s}"
         progression_summary.value = (
-            f"{metronome.starting_tempo} → {metronome.ending_tempo} BPM "
-            f"({'+' if metronome.step_size > 0 else ''}{metronome.step_size} BPM/step)"
+            f"{'+' if metronome.step_size > 0 else ''}{metronome.step_size} BPM/step"
         )
         render_beat_dots()
         hero_card.update()
@@ -139,24 +168,31 @@ def setupButtons(page: ft.Page, metronome: Metronome):
             control.update()
 
         if field_name == "current_beat_in_step":
-            tempo_display.value = str(metronome.current_tempo)
-            step_display.value = (
-                f"Step {metronome.current_step + 1} / {metronome.steps + 1}"
-            )
-            if metronome.beats > 0:
-                active_beat = (metronome.current_beat_in_step - 1) % metronome.beats
+            current_tempo_display.value = str(metronome.current_tempo)
+            reps_left.value = f"x{metronome.measures_left!s}"
+            if metronome.beats_per_measure > 0 and metronome.current_beat_in_step > 0:
+                active_beat = (
+                    metronome.current_beat_in_step - 1
+                ) % metronome.beats_per_measure
                 render_beat_dots(active_beat)
+            else:
+                render_beat_dots(-1)
             hero_card.update()
 
-        elif field_name in ("current_step", "starting_tempo", "ending_tempo", "steps"):
-            tempo_display.value = str(metronome.current_tempo)
-            step_display.value = (
-                f"Step {metronome.current_step + 1} / {metronome.steps}"
-            )
-            progression_summary.value = (
-                f"{metronome.starting_tempo} → {metronome.ending_tempo} BPM "
-                f"({'+' if metronome.step_size > 0 else ''}{metronome.step_size} BPM/step)"
-            )
+        elif field_name in (
+            "current_step",
+            "starting_tempo",
+            "ending_tempo",
+            "steps",
+            "measures_per_step",
+            "beats_per_measure",
+        ):
+            starting_tempo_display.value = str(metronome.starting_tempo)
+            ending_tempo_display.value = str(metronome.ending_tempo)
+            current_tempo_display.value = str(metronome.current_tempo)
+            reps_left.value = f"x{metronome.measures_left!s}"
+            progression_summary.value = f"{'+' if metronome.step_size > 0 else ''}{metronome.step_size} BPM/step"
+            render_beat_dots()
             hero_card.update()
 
         elif field_name == "stopped":
@@ -166,43 +202,37 @@ def setupButtons(page: ft.Page, metronome: Metronome):
 
     metronome.add_listener(on_metronome_change)
 
-    # --- Inputs ---
     beats_input = PractinomNumberInput(
         label="Ticks / Rep",
-        value=str(metronome.beats),
-        expand=1,
-        on_blur=on_input_change("beats", metronome.beats),
+        value=str(metronome.beats_per_measure),
+        on_blur=on_input_change("beats_per_measure", metronome.beats_per_measure),
     )
     starting_tempo_input = PractinomNumberInput(
         label="Start Tempo",
         value=str(metronome.starting_tempo),
         suffix="BPM",
-        expand=1,
         on_blur=on_input_change("starting_tempo", metronome.starting_tempo),
     )
     ending_tempo_input = PractinomNumberInput(
         label="Target Tempo",
         value=str(metronome.ending_tempo),
         suffix="BPM",
-        expand=1,
         on_blur=on_input_change("ending_tempo", metronome.ending_tempo),
     )
     steps_input = PractinomNumberInput(
         label="Total Steps",
         value=str(metronome.steps),
-        expand=1,
         on_blur=on_input_change("steps", metronome.steps),
     )
     measures_per_step_input = PractinomNumberInput(
         label="Reps / Step",
         value=str(metronome.measures_per_step),
-        expand=1,
         on_blur=on_input_change("measures_per_step", metronome.measures_per_step),
     )
 
     input_fields.update(
         {
-            "beats": beats_input,
+            "beats_per_measure": beats_input,
             "starting_tempo": starting_tempo_input,
             "ending_tempo": ending_tempo_input,
             "steps": steps_input,
@@ -210,7 +240,6 @@ def setupButtons(page: ft.Page, metronome: Metronome):
         }
     )
 
-    # --- Header ---
     header_section = ft.Row(
         controls=[
             ft.Row(
@@ -249,33 +278,34 @@ def setupButtons(page: ft.Page, metronome: Metronome):
         alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
     )
 
-    # --- Hero Live Display Card ---
     hero_card = ft.Container(
         content=ft.Column(
             controls=[
                 ft.Row(
-                    controls=[
-                        step_display,
-                    ],
-                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                    controls=[reps_left],
+                    alignment=ft.MainAxisAlignment.CENTER,
+                    vertical_alignment=ft.CrossAxisAlignment.END,
                 ),
-                ft.Container(
-                    alignment=ft.Alignment.CENTER,
-                    padding=ft.Padding.symmetric(horizontal=100),
-                    content=ft.Row(
-                        controls=[
-                            tempo_display,  # TODO change design to starting -> current -> end BPM
-                            ft.Text(
-                                value="BPM",
-                                size=18,
-                                weight=ft.FontWeight.BOLD,
-                                color=BG_COLOR,
-                            ),
-                        ],
-                        spacing=8,
-                        width=150,
-                        vertical_alignment=ft.CrossAxisAlignment.CENTER,
-                    ),
+                ft.Row(
+                    controls=[
+                        ft.Row(
+                            controls=[starting_tempo_display, arrow_symbol_left],
+                            expand=1,
+                            spacing=8,
+                            alignment=ft.MainAxisAlignment.END,
+                            vertical_alignment=ft.CrossAxisAlignment.CENTER,
+                        ),
+                        current_tempo_display,
+                        ft.Row(
+                            controls=[arrow_symbol_right, ending_tempo_display],
+                            expand=1,
+                            spacing=8,
+                            alignment=ft.MainAxisAlignment.START,
+                            vertical_alignment=ft.CrossAxisAlignment.CENTER,
+                        ),
+                    ],
+                    spacing=8,
+                    vertical_alignment=ft.CrossAxisAlignment.CENTER,
                 ),
                 ft.Row(
                     controls=[
@@ -298,23 +328,15 @@ def setupButtons(page: ft.Page, metronome: Metronome):
         content=ft.Column(
             controls=[
                 ft.Row(
-                    controls=[
-                        beats_input,
-                    ],
+                    controls=[beats_input],
                     vertical_alignment=ft.CrossAxisAlignment.CENTER,
                 ),
                 ft.Row(
-                    controls=[
-                        starting_tempo_input,
-                        ending_tempo_input,
-                    ],
+                    controls=[starting_tempo_input, ending_tempo_input],
                     spacing=12,
                 ),
                 ft.Row(
-                    controls=[
-                        steps_input,
-                        measures_per_step_input,
-                    ],
+                    controls=[steps_input, measures_per_step_input],
                     spacing=12,
                 ),
             ],
@@ -324,7 +346,6 @@ def setupButtons(page: ft.Page, metronome: Metronome):
         padding=16,
     )
 
-    # --- Playback Controls ---
     def on_play_click(e):
         metronome.play()
 
@@ -357,7 +378,6 @@ def setupButtons(page: ft.Page, metronome: Metronome):
             spacing=4,
         ),
         bgcolor=ACCENT_COLOR,
-        expand=1,
         on_click=on_pause_click,
     )
 
@@ -370,7 +390,6 @@ def setupButtons(page: ft.Page, metronome: Metronome):
             spacing=4,
         ),
         bgcolor=ACCENT_COLOR,
-        expand=1,
         on_click=on_stop_click,
     )
 
@@ -379,7 +398,6 @@ def setupButtons(page: ft.Page, metronome: Metronome):
         spacing=10,
     )
 
-    # --- Main Application Container ---
     main_card = ft.Container(
         content=ft.Column(
             controls=[
@@ -413,17 +431,10 @@ def main(page: ft.Page):
 
     page.title = "Practinom • Practice Metronome"
     page.bgcolor = BG_COLOR
-    page.padding = ft.Padding.symmetric(vertical=24, horizontal=16)
     page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
-    page.vertical_alignment = ft.MainAxisAlignment.START
     page.scroll = ft.ScrollMode.AUTO
 
-    page.window.width = 510
-    page.window.height = 790
-    page.window.min_width = 440
-    page.window.min_height = 650
-
-    setupButtons(page, metronome)
+    setup_buttons(page, metronome)
     page.update()
 
 
