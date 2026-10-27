@@ -21,7 +21,7 @@ class AudioPlayer:
         self.current_library = library
         self.players: dict[consts.BeatType, flet_audio.Audio] = {
             beat_type: flet_audio.Audio(
-                src=src,
+                src=f"/{src}",
                 volume=self.volume,
                 release_mode=flet_audio.ReleaseMode.STOP,
             )

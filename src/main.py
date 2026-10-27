@@ -115,28 +115,33 @@ def setup_buttons(page: ft.Page, metronome: Metronome):
         spacing=8,
         alignment=ft.MainAxisAlignment.CENTER,
         vertical_alignment=ft.CrossAxisAlignment.CENTER,
+        height=16,
     )
 
     def render_beat_dots(active_idx: int = -1):
         dots = []
         count = min(max(metronome.beats_per_measure, 1), 16)
+
         for i in range(count):
             is_active = i == active_idx
-            if is_active:
-                color = BG_COLOR if i == 0 else "#FFFFFF"
-                size = 12
-            else:
-                color = ACCENT_COLOR
-                size = 8
+
             dots.append(
                 ft.Container(
-                    width=size,
-                    height=size,
-                    border_radius=size // 2,
-                    bgcolor=color,
-                    animate=ft.Animation(100, ft.AnimationCurve.EASE_OUT),
+                    width=12,
+                    height=12,
+                    alignment=ft.Alignment.CENTER,
+                    content=ft.Container(
+                        width=12 if is_active else 8,
+                        height=12 if is_active else 8,
+                        border_radius=6,
+                        bgcolor=(BG_COLOR if i == 0 else "#FFFFFF")
+                        if is_active
+                        else ACCENT_COLOR,
+                        animate=ft.Animation(100, ft.AnimationCurve.EASE_OUT),
+                    ),
                 )
             )
+
         beat_dots_row.controls = dots
 
     render_beat_dots()
